@@ -12,8 +12,6 @@ typedef struct
     int count;
 } MoveList;
 
-static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer);
-
 static void findEmptySpots(char board[BOARD_SIZE][BOARD_SIZE], MoveList *out_emptySpots)
 {
     out_emptySpots->count = 0;
@@ -124,6 +122,8 @@ static int boardScore(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
 
     return GAME_TIE;
 }
+
+static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer);
 
 static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
 {
