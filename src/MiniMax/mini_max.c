@@ -27,6 +27,45 @@ static void findEmptySpots(char board[BOARD_SIZE][BOARD_SIZE], MoveList *out_emp
     }
 }
 
+static int moveWeight(int row, int col)
+{
+    int weight = 2;
+
+    if (row == col)
+        ++weight;
+
+    if (row + col == BOARD_SIZE - 1)
+        ++weight;
+
+    return weight;
+}
+
+static void orderMoves(MoveList *moves)
+{
+    for (int i = 0; i < moves->count - 1; ++i)
+    {
+        int best = i;
+        int bestWeight = moveWeight(moves->moves[i].row, moves->moves[i].col);
+
+        for (int j = i + 1; j < moves->count; ++j)
+        {
+            int weight = moveWeight(moves->moves[j].row, moves->moves[j].col);
+            if (weight > bestWeight)
+            {
+                best = j;
+                bestWeight = weight;
+            }
+        }
+
+        if (best != i)
+        {
+            Move swapBuffer = moves->moves[i];
+            moves->moves[i] = moves->moves[best];
+            moves->moves[best] = swapBuffer;
+        }
+    }
+}
+
 static int boardScore(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
 {
     for (int i = 0; i < BOARD_SIZE; i++)
@@ -133,13 +172,16 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, unsign
     {
         if (state == GAME_TIE)
             return 0;
+
         if (state > 0)
             return state - depth;
+
         return state + depth;
     }
 
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
+    orderMoves(&emptySpots);
 
     for (int i = 0; i < emptySpots.count; i++)
     {
@@ -164,13 +206,16 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, unsigne
     {
         if (state == GAME_TIE)
             return 0;
+
         if (state > 0)
             return state - depth;
+
         return state + depth;
     }
 
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
+    orderMoves(&emptySpots);
 
     for (int i = 0; i < emptySpots.count; i++)
     {
@@ -192,6 +237,8 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
 {
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
+    orderMoves(&emptySpots);
+
     if (emptySpots.count == 0)
     {
         *out_row = 0;
@@ -217,7 +264,7 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
             return;
         }
 
-        int score = miniMaxLow(board, aiPlayer, 1 + 1, alpha, beta);
+        int score = miniMaxLow(board, aiPlayer, 1, alpha, beta);
         board[move.row][move.col] = ' ';
 
         if (score > alpha)
