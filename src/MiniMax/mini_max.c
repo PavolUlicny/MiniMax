@@ -123,9 +123,9 @@ static int boardScore(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
     return GAME_TIE;
 }
 
-static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth);
+static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, unsigned long long depth, int alpha, int beta);
 
-static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth)
+static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, unsigned long long depth, int alpha, int beta)
 {
     int state = boardScore(board, aiPlayer);
 
@@ -137,8 +137,6 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int de
             return state - depth;
         return state + depth;
     }
-
-    int bestScore = -10000;
 
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
@@ -147,17 +145,18 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int de
     {
         Move move = emptySpots.moves[i];
         board[move.row][move.col] = aiPlayer;
-        int score = miniMaxLow(board, aiPlayer, depth + 1);
+        int score = miniMaxLow(board, aiPlayer, depth + 1, alpha, beta);
         board[move.row][move.col] = ' ';
 
-        if (score > bestScore)
-            bestScore = score;
+        alpha = (score > alpha) ? score : alpha;
+        if (beta <= alpha)
+            break;
     }
 
-    return bestScore;
+    return alpha;
 }
 
-static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth)
+static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, unsigned long long depth, int alpha, int beta)
 {
     int state = boardScore(board, aiPlayer);
 
@@ -169,8 +168,6 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
             return state - depth;
         return state + depth;
     }
-
-    int bestScore = 10000;
 
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
@@ -180,24 +177,21 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
         Move move = emptySpots.moves[i];
         char opponent = (aiPlayer == 'x') ? 'o' : 'x';
         board[move.row][move.col] = opponent;
-        int score = miniMaxHigh(board, aiPlayer, depth + 1);
+        int score = miniMaxHigh(board, aiPlayer, depth + 1, alpha, beta);
         board[move.row][move.col] = ' ';
 
-        if (score < bestScore)
-            bestScore = score;
+        beta = (score < beta) ? score : beta;
+        if (beta <= alpha)
+            break;
     }
 
-    return bestScore;
+    return beta;
 }
 
 void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, int *out_col)
 {
-    int bestScore = -10000;
-    Move bestMove;
-
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
-
     if (emptySpots.count == 0)
     {
         *out_row = 0;
@@ -205,20 +199,35 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
         return;
     }
 
-    bestMove = emptySpots.moves[0];
+    int alpha = -10000;
+    int beta = 10000;
+    Move bestMove = emptySpots.moves[0];
 
-    for (int i = 0; i < emptySpots.count; i++)
+    for (int i = 0; i < emptySpots.count; ++i)
     {
         Move move = emptySpots.moves[i];
         board[move.row][move.col] = aiPlayer;
-        int score = miniMaxLow(board, aiPlayer, 1);
+
+        int state = boardScore(board, aiPlayer);
+        if (state == 100)
+        {
+            board[move.row][move.col] = ' ';
+            *out_row = move.row;
+            *out_col = move.col;
+            return;
+        }
+
+        int score = miniMaxLow(board, aiPlayer, 1 + 1, alpha, beta);
         board[move.row][move.col] = ' ';
 
-        if (score > bestScore)
+        if (score > alpha)
         {
-            bestScore = score;
+            alpha = score;
             bestMove = move;
         }
+
+        if (alpha >= beta)
+            break;
     }
 
     *out_row = bestMove.row;
