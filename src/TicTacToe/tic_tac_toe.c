@@ -17,6 +17,17 @@ static void discardLine(void)
     }
 }
 
+static int numDigits(int number)
+{
+    int digitQuantity = 1;
+    while (number >= 10)
+    {
+        number /= 10;
+        ++digitQuantity;
+    }
+    return digitQuantity;
+}
+
 void initializeBoard()
 {
     for (size_t i = 0; i < BOARD_SIZE; i++)
@@ -30,23 +41,28 @@ void initializeBoard()
 
 void printBoard()
 {
-    printf("\n  ");
-    for (int c = 0; c < BOARD_SIZE; ++c)
-    {
-        printf(" %d ", c + 1);
-    }
-    printf("\n");
+    int digits = numDigits(BOARD_SIZE);
 
-    for (int i = 0; i < BOARD_SIZE; ++i)
+    putchar('\n');
+
+    printf("%*s", digits, "");
+    for (int c = 1; c <= BOARD_SIZE; ++c)
     {
-        printf(" %d", i + 1);
-        for (int j = 0; j < BOARD_SIZE; j++)
-        {
-            printf("[%c]", board[i][j]);
-        }
-        printf("\n");
+        printf(" %*d ", digits, c);
     }
-    printf("\n");
+    putchar('\n');
+
+    for (int i = 1; i <= BOARD_SIZE; ++i)
+    {
+        printf("%*d", digits, i);
+
+        for (int j = 1; j <= BOARD_SIZE; ++j)
+        {
+            printf("[%*c]", digits, board[i - 1][j - 1]);
+        }
+        putchar('\n');
+    }
+    putchar('\n');
 }
 
 void printGameResult(GameResult result)
