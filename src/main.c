@@ -58,8 +58,8 @@ static void playGame(void)
 
 static int selfPlay(int gameCount, int quiet)
 {
-    int playerWins = 0;
-    int aiWins = 0;
+    int ai1Wins = 0;
+    int ai2Wins = 0;
     int ties = 0;
     struct timespec startTime;
     struct timespec endTime;
@@ -83,12 +83,12 @@ static int selfPlay(int gameCount, int quiet)
 
             if (result != GAME_CONTINUE)
             {
-                if (result == PLAYER_WIN)
-                    ++playerWins;
-                else if (result == AI_WIN)
-                    ++aiWins;
-                else if (result == GAME_TIE)
+                if (result == GAME_TIE)
                     ++ties;
+                else if (currentPlayer == 'x')
+                    ++ai1Wins;
+                else
+                    ++ai2Wins;
                 break;
             }
         }
@@ -99,7 +99,7 @@ static int selfPlay(int gameCount, int quiet)
         clock_gettime(CLOCK_MONOTONIC, &endTime);
         double elapsed = (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_nsec - startTime.tv_nsec) / 1e9;
         double throughput = elapsed > 0 ? (gameCount / elapsed) : 0.0;
-        printf("Self-play finished: %d games. PlayerWins=%d AIWins=%d Ties=%d\n", gameCount, playerWins, aiWins, ties);
+        printf("Self-play finished: %d games. AI1Wins=%d AI2Wins=%d Ties=%d\n", gameCount, ai1Wins, ai2Wins, ties);
         printf("Elapsed: %.3f s, Throughput: %.1f games/s\n", elapsed, throughput);
     }
 
