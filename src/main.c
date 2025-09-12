@@ -1,6 +1,8 @@
+#define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "TicTacToe/tic_tac_toe.h"
 #include "MiniMax/mini_max.h"
 
@@ -59,6 +61,11 @@ static int selfPlay(int gameCount, int quiet)
     int playerWins = 0;
     int aiWins = 0;
     int ties = 0;
+    struct timespec startTime;
+    struct timespec endTime;
+
+    if (!quiet)
+        clock_gettime(CLOCK_MONOTONIC, &startTime);
 
     for (int g = 0; g < gameCount; ++g)
     {
@@ -89,7 +96,11 @@ static int selfPlay(int gameCount, int quiet)
 
     if (!quiet)
     {
+        clock_gettime(CLOCK_MONOTONIC, &endTime);
+        double elapsed = (endTime.tv_sec - startTime.tv_sec) + (endTime.tv_nsec - startTime.tv_nsec) / 1e9;
+        double throughput = elapsed > 0 ? (gameCount / elapsed) : 0.0;
         printf("Self-play finished: %d games. PlayerWins=%d AIWins=%d Ties=%d\n", gameCount, playerWins, aiWins, ties);
+        printf("Elapsed: %.3f s, Throughput: %.1f games/s\n", elapsed, throughput);
     }
 
     return 0;
