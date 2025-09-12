@@ -53,27 +53,43 @@ static int moveWeight(int row, int col)
 
 static void orderMoves(MoveList *moves)
 {
-    for (int i = 0; i < moves->count - 1; ++i)
+    Move movesWithWeightFour[MAX_MOVES];
+    Move movesWithWeightThree[MAX_MOVES];
+    Move movesWithWeightTwo[MAX_MOVES];
+    int movesWithWeightFourCount = 0;
+    int movesWithWeightThreeCount = 0;
+    int movesWithWeightTwoCount = 0;
+
+    for (int moveIndex = 0; moveIndex < moves->count; ++moveIndex)
     {
-        int best = i;
-        int bestWeight = moveWeight(moves->moves[i].row, moves->moves[i].col);
-
-        for (int j = i + 1; j < moves->count; ++j)
+        Move move = moves->moves[moveIndex];
+        int weight = moveWeight(move.row, move.col);
+        if (weight == 4)
         {
-            int weight = moveWeight(moves->moves[j].row, moves->moves[j].col);
-            if (weight > bestWeight)
-            {
-                best = j;
-                bestWeight = weight;
-            }
+            movesWithWeightFour[movesWithWeightFourCount++] = move;
         }
-
-        if (best != i)
+        else if (weight == 3)
         {
-            Move swapBuffer = moves->moves[i];
-            moves->moves[i] = moves->moves[best];
-            moves->moves[best] = swapBuffer;
+            movesWithWeightThree[movesWithWeightThreeCount++] = move;
         }
+        else
+        {
+            movesWithWeightTwo[movesWithWeightTwoCount++] = move;
+        }
+    }
+
+    int writeIndex = 0;
+    for (int index = 0; index < movesWithWeightFourCount; ++index)
+    {
+        moves->moves[writeIndex++] = movesWithWeightFour[index];
+    }
+    for (int index = 0; index < movesWithWeightThreeCount; ++index)
+    {
+        moves->moves[writeIndex++] = movesWithWeightThree[index];
+    }
+    for (int index = 0; index < movesWithWeightTwoCount; ++index)
+    {
+        moves->moves[writeIndex++] = movesWithWeightTwo[index];
     }
 }
 
