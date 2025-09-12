@@ -22,7 +22,6 @@ extern "C"
 
     extern char board[BOARD_SIZE][BOARD_SIZE];
     extern char player_turn;
-    extern int move_count;
     extern char human_symbol;
     extern char ai_symbol;
 
