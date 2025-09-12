@@ -19,6 +19,7 @@ typedef enum
     AI_WIN_SCORE = 100,
     PLAYER_WIN_SCORE = -100,
     TIE_SCORE = 0,
+    CONTINUE_SCORE = 1,
     INF = INT_MAX
 } HelperScores;
 
@@ -165,11 +166,11 @@ static int boardScore(const char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
         for (int j = 0; j < BOARD_SIZE; j++)
         {
             if (board[i][j] == ' ')
-                return GAME_CONTINUE;
+                return CONTINUE_SCORE;
         }
     }
 
-    return GAME_TIE;
+    return TIE_SCORE;
 }
 
 static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth, int alpha, int beta);
@@ -177,9 +178,9 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
 static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth, int alpha, int beta)
 {
     int state = boardScore(board, aiPlayer);
-    if (state != GAME_CONTINUE)
+    if (state != CONTINUE_SCORE)
     {
-        if (state == GAME_TIE)
+        if (state == TIE_SCORE)
             return TIE_SCORE;
 
         if (state > 0)
@@ -216,9 +217,9 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
 {
 
     int state = boardScore(board, aiPlayer);
-    if (state != GAME_CONTINUE)
+    if (state != CONTINUE_SCORE)
     {
-        if (state == GAME_TIE)
+        if (state == TIE_SCORE)
             return TIE_SCORE;
 
         if (state > 0)
@@ -257,7 +258,7 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
     assert(aiPlayer == 'x' || aiPlayer == 'o');
 
     int state = boardScore(board, aiPlayer);
-    if (state != GAME_CONTINUE)
+    if (state != CONTINUE_SCORE)
     {
         *out_row = -1;
         *out_col = -1;
