@@ -40,15 +40,41 @@ static void findEmptySpots(const char board[BOARD_SIZE][BOARD_SIZE], MoveList *o
 
 static int moveWeight(int row, int col)
 {
-    int weight = 2;
+    int lowerMiddle = (BOARD_SIZE - 1) / 2;
+    int upperMiddle = BOARD_SIZE / 2;
 
-    if (row == col)
-        ++weight;
+    int distanceRowToLowerMiddle = row - lowerMiddle;
+    if (distanceRowToLowerMiddle < 0)
+        distanceRowToLowerMiddle = -distanceRowToLowerMiddle;
 
-    if (row + col == BOARD_SIZE - 1)
-        ++weight;
+    int distanceRowToUpperMiddle = row - upperMiddle;
+    if (distanceRowToUpperMiddle < 0)
+        distanceRowToUpperMiddle = -distanceRowToUpperMiddle;
 
-    return weight;
+    int minimalRowDistance = distanceRowToLowerMiddle < distanceRowToUpperMiddle ? distanceRowToLowerMiddle : distanceRowToUpperMiddle;
+
+    int distanceColumnToLowerMiddle = col - lowerMiddle;
+    if (distanceColumnToLowerMiddle < 0)
+        distanceColumnToLowerMiddle = -distanceColumnToLowerMiddle;
+
+    int distanceColumnToUpperMiddle = col - upperMiddle;
+    if (distanceColumnToUpperMiddle < 0)
+        distanceColumnToUpperMiddle = -distanceColumnToUpperMiddle;
+
+    int minimalColumnDistance = distanceColumnToLowerMiddle < distanceColumnToUpperMiddle ? distanceColumnToLowerMiddle : distanceColumnToUpperMiddle;
+
+    int manhattanDistanceToCenter = minimalRowDistance + minimalColumnDistance;
+
+    if (manhattanDistanceToCenter == 0)
+        return 4;
+
+    if (row == col || row + col == BOARD_SIZE - 1)
+        return 3;
+
+    if (manhattanDistanceToCenter == 1)
+        return 3;
+
+    return 2;
 }
 
 static void orderMoves(MoveList *moves)
