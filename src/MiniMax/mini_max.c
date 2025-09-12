@@ -310,6 +310,22 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
     MoveList emptySpots;
     findEmptySpots(board, &emptySpots);
 
+    if (emptySpots.count == BOARD_SIZE * BOARD_SIZE)
+    {
+        int lowerMiddle = (BOARD_SIZE - 1) / 2;
+        int upperMiddle = BOARD_SIZE / 2;
+        int centerRow = lowerMiddle;
+        int centerCol = lowerMiddle;
+        if (BOARD_SIZE % 2 == 0)
+        {
+            centerRow = upperMiddle;
+            centerCol = upperMiddle;
+        }
+        *out_row = centerRow;
+        *out_col = centerCol;
+        return;
+    }
+
     if (emptySpots.count == 1)
     {
         *out_row = emptySpots.moves[0].row;
