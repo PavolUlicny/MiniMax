@@ -1,6 +1,5 @@
 #include "mini_max.h"
 #include <limits.h>
-#include <assert.h>
 
 typedef struct
 {
@@ -384,8 +383,6 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
 
 void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, int *out_col)
 {
-    assert(aiPlayer == 'x' || aiPlayer == 'o');
-
     int state = boardScore(board, aiPlayer);
     if (state != CONTINUE_SCORE)
     {
