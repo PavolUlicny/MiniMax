@@ -77,6 +77,69 @@ static int moveWeight(int row, int col)
     return 2;
 }
 
+static int didLastMoveWin(const char board[BOARD_SIZE][BOARD_SIZE], int row, int col)
+{
+    char player = board[row][col];
+    if (player == ' ')
+        return 0;
+
+    int win = 1;
+    for (int c = 0; c < BOARD_SIZE; ++c)
+    {
+        if (board[row][c] != player)
+        {
+            win = 0;
+            break;
+        }
+    }
+    if (win)
+        return 1;
+
+    win = 1;
+    for (int r = 0; r < BOARD_SIZE; ++r)
+    {
+        if (board[r][col] != player)
+        {
+            win = 0;
+            break;
+        }
+    }
+    if (win)
+        return 1;
+
+    if (row == col)
+    {
+        win = 1;
+        for (int i = 0; i < BOARD_SIZE; ++i)
+        {
+            if (board[i][i] != player)
+            {
+                win = 0;
+                break;
+            }
+        }
+        if (win)
+            return 1;
+    }
+
+    if (row + col == BOARD_SIZE - 1)
+    {
+        win = 1;
+        for (int i = 0; i < BOARD_SIZE; ++i)
+        {
+            if (board[i][BOARD_SIZE - 1 - i] != player)
+            {
+                win = 0;
+                break;
+            }
+        }
+        if (win)
+            return 1;
+    }
+
+    return 0;
+}
+
 static void orderMoves(MoveList *moves)
 {
     Move movesWithWeightFour[MAX_MOVES];
@@ -240,7 +303,19 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int de
     {
         Move move = emptySpots.moves[i];
         board[move.row][move.col] = aiPlayer;
-        int score = miniMaxLow(board, aiPlayer, depth + 1, alpha, beta);
+        int score;
+        if (didLastMoveWin(board, move.row, move.col))
+        {
+            score = AI_WIN_SCORE - (depth + 1);
+        }
+        else if (emptySpots.count == 1)
+        {
+            score = TIE_SCORE;
+        }
+        else
+        {
+            score = miniMaxLow(board, aiPlayer, depth + 1, alpha, beta);
+        }
         board[move.row][move.col] = ' ';
 
         if (score > bestScore)
@@ -280,7 +355,19 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
     {
         Move move = emptySpots.moves[i];
         board[move.row][move.col] = opponent;
-        int score = miniMaxHigh(board, aiPlayer, depth + 1, alpha, beta);
+        int score;
+        if (didLastMoveWin(board, move.row, move.col))
+        {
+            score = PLAYER_WIN_SCORE + (depth + 1);
+        }
+        else if (emptySpots.count == 1)
+        {
+            score = TIE_SCORE;
+        }
+        else
+        {
+            score = miniMaxHigh(board, aiPlayer, depth + 1, alpha, beta);
+        }
         board[move.row][move.col] = ' ';
 
         if (score < bestScore)
@@ -345,8 +432,7 @@ void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, 
         Move move = emptySpots.moves[i];
         board[move.row][move.col] = aiPlayer;
 
-        state = boardScore(board, aiPlayer);
-        if (state == AI_WIN_SCORE)
+        if (didLastMoveWin(board, move.row, move.col))
         {
             board[move.row][move.col] = ' ';
             *out_row = move.row;
