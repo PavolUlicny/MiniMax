@@ -118,6 +118,7 @@ The release build uses aggressive optimization flags:
 ```
 make CFLAGS+='-DBOARD_SIZE=4'
 ```
+Or by changing the `BOARD_SIZE` variable in (tic_tac_toe.h)[src/TicTacToe/tic_tac_toe.h]
 
 Note: Larger board sizes increase the search space exponentially; alpha–beta plus move ordering helps, but very large boards will still be slow without additional pruning techniques.
 
