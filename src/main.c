@@ -1,3 +1,12 @@
+/*
+ * Program entry and CLI modes
+ * ---------------------------
+ * - Interactive game loop (human vs AI)
+ * - Self-play benchmarking via --selfplay|-s [games] [--quiet|-q]
+ *   * Default games: 1000 when omitted
+ *   * --quiet/-q suppresses timing output
+ */
+
 #define _POSIX_C_SOURCE 199309L
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,6 +15,10 @@
 #include "TicTacToe/tic_tac_toe.h"
 #include "MiniMax/mini_max.h"
 
+/*
+ * Interactive human vs AI loop. Prompts the user to choose a symbol, then
+ * alternates between human input and AI selection until the game ends.
+ */
 static void playGame(void)
 {
     while (1)
@@ -56,6 +69,15 @@ static void playGame(void)
     }
 }
 
+/*
+ * Self-play benchmarking: runs gameCount AI vs AI games starting from an empty
+ * board, alternating turns. Collects win/tie stats and (optionally) prints
+ * timing and throughput.
+ *
+ * Parameters:
+ *  - gameCount: number of games to run
+ *  - quiet:     when non-zero, suppress timing output
+ */
 static int selfPlay(int gameCount, int quiet)
 {
     int ai1Wins = 0;
@@ -106,6 +128,11 @@ static int selfPlay(int gameCount, int quiet)
     return 0;
 }
 
+/*
+ * CLI:
+ *  - Default (no args): interactive human vs AI game
+ *  - --selfplay|-s [games] [--quiet|-q]: run AI vs AI for N games (default 1000)
+ */
 int main(int argc, char **argv)
 {
     if (argc >= 2 && (strcmp(argv[1], "--selfplay") == 0 || strcmp(argv[1], "-s") == 0))

@@ -1,13 +1,25 @@
+/*
+ * Tic-Tac-Toe: board state and CLI utilities
+ * ------------------------------------------
+ *
+ * Responsibilities in this file:
+ *  - Maintain global board state and player symbols
+ *  - Basic I/O helpers for a terminal UI (reading moves, printing board)
+ *  - Lightweight result checking after each move
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "tic_tac_toe.h"
 
+/* Global game state used by the simple CLI program. */
 char board[BOARD_SIZE][BOARD_SIZE];
 char player_turn = 'x';
-int move_count = 0;
+int move_count = 0; /* number of moves played so far */
 char human_symbol = 'x';
 char ai_symbol = 'o';
 
+/* Consume the rest of the current input line (including newline). */
 static void discardLine(void)
 {
     int ch;
@@ -17,6 +29,7 @@ static void discardLine(void)
     }
 }
 
+/* Count how many digits are needed to print a non-negative integer. */
 static int numDigits(int number)
 {
     int digitQuantity = 1;
@@ -28,6 +41,7 @@ static int numDigits(int number)
     return digitQuantity;
 }
 
+/* Initialize all board cells to ' ' (empty). */
 void initializeBoard()
 {
     for (size_t i = 0; i < BOARD_SIZE; i++)
@@ -39,6 +53,7 @@ void initializeBoard()
     }
 }
 
+/* Pretty-print the board with 1-based indices on both axes. */
 void printBoard()
 {
     int digits = numDigits(BOARD_SIZE);
@@ -65,6 +80,7 @@ void printBoard()
     putchar('\n');
 }
 
+/* Print a message and the final board for a terminal result. */
 void printGameResult(GameResult result)
 {
     switch (result)
@@ -91,6 +107,11 @@ void printGameResult(GameResult result)
     }
 }
 
+/*
+ * Prompt the user for a move as 1-based (column, row), validate input, and
+ * return 0-based (row, col). Re-prompts on invalid or out-of-range input.
+ * On EOF, exits gracefully.
+ */
 void getMove(int *out_row, int *out_col)
 {
     while (1)
@@ -172,6 +193,7 @@ void getMove(int *out_row, int *out_col)
     }
 }
 
+/* Place the current player's symbol and toggle player_turn; increment move_count. */
 void makeMove(int row, int col)
 {
     board[row][col] = player_turn;
@@ -179,6 +201,11 @@ void makeMove(int row, int col)
     move_count++;
 }
 
+/*
+ * Check whether the last move at (row,col) finished the game.
+ * Scans the affected row, column, and diagonals only.
+ * Returns PLAYER_WIN/AI_WIN/TIE/CONTINUE.
+ */
 GameResult checkWinner(int row, int col)
 {
     char player = board[row][col];
@@ -243,6 +270,7 @@ GameResult checkWinner(int row, int col)
     return GAME_TIE;
 }
 
+/* Reset the board and counters to start a fresh game. */
 void restartGame(void)
 {
     initializeBoard();
@@ -250,6 +278,7 @@ void restartGame(void)
     player_turn = 'x';
 }
 
+/* Ask user to restart; returns 1 for yes, 0 for no. */
 int askRestart(void)
 {
     while (1)
@@ -280,6 +309,7 @@ int askRestart(void)
     }
 }
 
+/* Let the user choose 'x' or 'o'; defaults to 'x' on EOF. */
 void choosePlayerSymbol(void)
 {
     while (1)

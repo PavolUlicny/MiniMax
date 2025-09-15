@@ -1,18 +1,35 @@
+/*
+ * Minimax search with alpha–beta pruning for Tic-Tac-Toe
+ * -------------------------------------------------------
+ *
+ * This file implements a deterministic Minimax engine with:
+ *  - Alpha–beta pruning
+ *  - Lightweight move ordering (center > diagonals/adjacent > others)
+ *  - Early cutoffs via last-move win checks and last-move tie shortcut
+ *  - Depth-adjusted terminal scoring (prefer faster wins, delay losses)
+ *  - Simple opening heuristic: play center on empty board
+ *
+ * Public entry point: getAiMove(...)
+ */
+
 #include "mini_max.h"
 #include <limits.h>
 
+/* A single board coordinate (row, col). */
 typedef struct
 {
     int row;
     int col;
 } Move;
 
+/* A trivial fixed-size container for generated legal moves. */
 typedef struct
 {
     Move moves[MAX_MOVES];
     int count;
 } MoveList;
 
+/* Helper constants used by the evaluation and search. */
 typedef enum
 {
     AI_WIN_SCORE = 100,
@@ -22,6 +39,7 @@ typedef enum
     INF = INT_MAX
 } HelperScores;
 
+/* Collect all empty cells in row-major order. */
 static void findEmptySpots(const char board[BOARD_SIZE][BOARD_SIZE], MoveList *out_emptySpots)
 {
     out_emptySpots->count = 0;
@@ -37,6 +55,13 @@ static void findEmptySpots(const char board[BOARD_SIZE][BOARD_SIZE], MoveList *o
     }
 }
 
+/*
+ * Heuristic weight for move ordering:
+ *  - 4: exact center (Manhattan distance 0 to center)
+ *  - 3: on a diagonal OR Manhattan distance 1 from center
+ *  - 2: everything else
+ * Works for odd and even BOARD_SIZE by using two central indices.
+ */
 static int moveWeight(int row, int col)
 {
     int lowerMiddle = (BOARD_SIZE - 1) / 2;
@@ -76,6 +101,10 @@ static int moveWeight(int row, int col)
     return 2;
 }
 
+/*
+ * Fast win check based on the last move applied.
+ * Only scans the affected row, column, and relevant diagonal(s).
+ */
 static int didLastMoveWin(const char board[BOARD_SIZE][BOARD_SIZE], int row, int col)
 {
     char player = board[row][col];
@@ -139,6 +168,11 @@ static int didLastMoveWin(const char board[BOARD_SIZE][BOARD_SIZE], int row, int
     return 0;
 }
 
+/*
+ * Partition moves by weight into three buckets and concatenate them
+ * (4 -> 3 -> 2). Within each bucket, original row-major ordering is kept,
+ * ensuring deterministic results for tied scores.
+ */
 static void orderMoves(MoveList *moves)
 {
     Move movesWithWeightFour[MAX_MOVES];
@@ -181,6 +215,13 @@ static void orderMoves(MoveList *moves)
     }
 }
 
+/*
+ * Terminal evaluation:
+ *  - +100 if a line completed by aiPlayer
+ *  - -100 if a line completed by opponent
+ *  -  0 for tie
+ *  -  1 (CONTINUE_SCORE) if the game is not terminal
+ */
 static int boardScore(const char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
 {
     for (int i = 0; i < BOARD_SIZE; i++)
@@ -279,11 +320,16 @@ static int boardScore(const char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer)
 
 static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth, int alpha, int beta);
 
+/*
+ * Maximizing ply (AI).
+ * Returns best score achievable for aiPlayer from the current position.
+ */
 static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth, int alpha, int beta)
 {
     int state = boardScore(board, aiPlayer);
     if (state != CONTINUE_SCORE)
     {
+        /* terminal: propagate depth-adjusted values */
         if (state == TIE_SCORE)
             return TIE_SCORE;
 
@@ -305,6 +351,7 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int de
         int score;
         if (didLastMoveWin(board, move.row, move.col))
         {
+            /* immediate win after this move; prefer faster wins */
             score = AI_WIN_SCORE - (depth + 1);
         }
         else if (emptySpots.count == 1)
@@ -329,12 +376,17 @@ static int miniMaxHigh(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int de
     return bestScore;
 }
 
+/*
+ * Minimizing ply (opponent).
+ * Returns worst-case score for aiPlayer given optimal opponent play.
+ */
 static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int depth, int alpha, int beta)
 {
 
     int state = boardScore(board, aiPlayer);
     if (state != CONTINUE_SCORE)
     {
+        /* terminal: propagate depth-adjusted values */
         if (state == TIE_SCORE)
             return TIE_SCORE;
 
@@ -357,6 +409,7 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
         int score;
         if (didLastMoveWin(board, move.row, move.col))
         {
+            /* opponent just won; later losses are (slightly) better */
             score = PLAYER_WIN_SCORE + (depth + 1);
         }
         else if (emptySpots.count == 1)
@@ -381,6 +434,12 @@ static int miniMaxLow(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int dep
     return bestScore;
 }
 
+/*
+ * Public entry: select the best move for aiPlayer.
+ * Short-circuits:
+ *  - Terminal board -> (-1, -1)
+ *  - Empty board    -> center (even sizes pick (BOARD_SIZE/2, BOARD_SIZE/2))
+ */
 void getAiMove(char board[BOARD_SIZE][BOARD_SIZE], char aiPlayer, int *out_row, int *out_col)
 {
     int state = boardScore(board, aiPlayer);
